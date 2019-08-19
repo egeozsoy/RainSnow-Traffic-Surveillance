@@ -1,0 +1,7 @@
+tensorflow==2.0.0-beta1
+numpy==1.16.4
+opencv-python
+matplotlib
+pycocotools
+scikit-image
+Cython

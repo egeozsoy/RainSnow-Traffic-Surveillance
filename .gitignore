@@ -1,0 +1,9 @@
+*.yml
+*.png
+*.db
+*.mkv
+*.bat
+aauRainSnow-rgb.json
+aauRainSnow-thermal.json
+Visualize AAU RainSnow annotations.ipynb
+.idea/*
