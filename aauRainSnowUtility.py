@@ -5,7 +5,7 @@ import cv2
 
 # For additional methods refer to https://www.kaggle.com/aalborguniversity/aau-rainsnow
 
-def getRegistrationVarsFromFileName(imageFileName:str):
+def getRegistrationVarsFromFileName(imageFileName: str):
     split = imageFileName.split('/')
 
     if len(split) >= 3:
@@ -33,11 +33,10 @@ def getRegistrationVarsFromFileName(imageFileName:str):
 
 def transferCamera(img, img_name, mode='thermalToRgb'):
     '''
-
     :param img: image to transfer, as matrix
     :param img_name: image name as string
     :param mode: can either be thermalToRgb or rgbToThermal
-    :return:
+    :return: image that is transferred
     '''
     registration = getRegistrationVarsFromFileName(img_name)
     homography = registration["homCam1Cam2"] if mode == 'rgbToThermal' else registration["homCam2Cam1"]
