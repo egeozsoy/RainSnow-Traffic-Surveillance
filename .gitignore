@@ -7,3 +7,4 @@ aauRainSnow-rgb.json
 aauRainSnow-thermal.json
 Visualize AAU RainSnow annotations.ipynb
 .idea/*
+*.h5

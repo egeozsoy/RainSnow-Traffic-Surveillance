@@ -1,7 +1,13 @@
-tensorflow==2.0.0-beta1
+tensorflow>=1.3.0
+keras>=2.0.8
+h5py
 numpy==1.16.4
+scipy
 opencv-python
 matplotlib
+Pillow
 pycocotools
 scikit-image
-Cython
+imgaug
+IPython[all]
+https://github.com/egeozsoy/Mask_RCNN/blob/master/dist/mask_rcnn-2.1-py3-none-any.whl?raw=true
