@@ -1,37 +1,24 @@
-import tensorflow as tf
-from pycocotools import coco
-from preprocess import load_and_preprocess_image, load_tf
-from mrcnn.config import Config
-from mrcnn import model as modellib
-from mrcnn import utils
-from mrcnn import visualize
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-from pycocotools import mask as maskUtils
-import skimage
-from matplotlib import pyplot as plt
-
-import zipfile
-import urllib.request
-import shutil
 import os
 
 import numpy as np
+import skimage
+from matplotlib import pyplot as plt
+from pycocotools import coco
 
-# TODO find meaningful augmentations that we can apply
+from mrcnn import model as modellib
+from mrcnn import utils
+from mrcnn import visualize
+from mrcnn.config import Config
 
-# TODO tutorial and sample code with MASK_RCNN
-# TODO check this for dataformat etc. https://engineering.matterport.com/splash-of-color-instance-segmentation-with-mask-r-cnn-and-tensorflow-7c761e238b46
+# Architecture https://github.com/matterport/Mask_RCNN
+# Useful reference https://github.com/matterport/Mask_RCNN/blob/master/samples/coco/coco.py
 
-# https://github.com/matterport/Mask_RCNN/blob/master/samples/coco/coco.py (might be helpful)
-
-# Architecture to use is ttps://github.com/matterport/Mask_RCNN
 
 ############################################################
 #  Configurations
 ############################################################
 
-
+# Classes plane and train are added to now leave any empty ids in between, but are not in the RainSnowTraffic Dataset
 class_name_mapping = {0: 'empty', 1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorbike', 5: 'plane', 6: 'bus', 7: 'train', 8: 'truck'}
 
 
@@ -43,7 +30,6 @@ class RainSnowTrafficConfig(Config):
     NAME = "RainSnowTraffic"
 
     # We use a GPU with 12GB memory, which can fit two images.
-    # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
@@ -61,42 +47,37 @@ class RainSnowTrafficDataset(utils.Dataset):
     def load_rainsnowtraffic(self, dataset_dir, subset):
         """Load the dataset
         dataset_dir: The root directory of the dataset.
-        subset: What to load (train, val, minival, valminusminival) # TODO Not implemented yet
-        auto_download: Automatically download and unzip MS-COCO images and annotations
+        subset: What to load (train, val, minival, valminusminival)
         """
-        # TODO merge thermal images
-        coco = COCO('aauRainSnow-rgb.json')
         image_dir = "{}/{}".format(dataset_dir, subset)
         # All classes
-        class_ids = sorted(coco.getCatIds())[:8]
+        class_ids = sorted(rainSnowRgbGt.getCatIds())[:8]
 
         # All images
-        image_ids = list(coco.imgs.keys())
+        image_ids = list(rainSnowRgbGt.imgs.keys())
 
         # Add classes
         for i in class_ids:
-            if i == 5 or i == 7: # we don't have any of these classes, but not sure if this is a correct fix
+            if i == 5 or i == 7:  # we don't have any of these two classes
                 continue
-            self.add_class("coco", i, coco.loadCats(i)[0]["name"])
+            self.add_class("coco", i, rainSnowRgbGt.loadCats(i)[0]["name"])
 
         # Add images
         for i in image_ids:
-            path = os.path.join(image_dir, coco.imgs[i]['file_name'])
+            path = os.path.join(image_dir, rainSnowRgbGt.imgs[i]['file_name'])
             if os.path.exists(path):
                 self.add_image(
                     "coco", image_id=i,
                     path=path,
-                    width=coco.imgs[i]["width"],
-                    height=coco.imgs[i]["height"],
-                    annotations=coco.loadAnns(coco.getAnnIds(
+                    width=rainSnowRgbGt.imgs[i]["width"],
+                    height=rainSnowRgbGt.imgs[i]["height"],
+                    annotations=rainSnowRgbGt.loadAnns(rainSnowRgbGt.getAnnIds(
                         imgIds=[i], catIds=class_ids, iscrowd=None)))
 
     def load_mask(self, image_id):
         """Load instance masks for the given image.
 
-        Different datasets use different ways to store masks. This
-        function converts the different mask format to one format
-        in the form of a bitmap [height, width, instances].
+        Format is bitmap: [height, width, instances].
 
         Returns:
         masks: A bool array of shape [height, width, instance count] with
@@ -148,28 +129,22 @@ def train(model):
     dataset_val.load_rainsnowtraffic('dataset', 'val')
     dataset_val.prepare()
 
-    # *** This training schedule is an example. Update to your needs ***
+    #
     # Since we're using a very small dataset, and starting from
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=30,
+                epochs=20,
                 layers='heads')
 
 
-def display_instances(image, masks, class_ids):
+def display_instances(image, masks, class_ids, image_name):
     """
     masks: [height, width, num_instances]
     class_ids: [num_instances]
-    class_names: list of class names of the dataset
-    scores: (optional) confidence scores for each box
-    title: (optional) Figure title
-    show_mask, show_bbox: To show masks and bounding boxes or not
-    figsize: (optional) the size of the image
-    colors: (optional) An array or colors to use with each object
-    captions: (optional) A list of strings to use as captions for each object
+    image_name: an image name used for saving
     """
     # Number of instances
     N = masks.shape[2]
@@ -211,17 +186,18 @@ def display_instances(image, masks, class_ids):
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
     plt.show()
+    plt.savefig('image_name')
 
 
 def detect_and_visualize(model, image_path):
     image = skimage.io.imread(image_path)
+    image_name = image_path.split('/', 2)[-1]
     r = model.detect([image], verbose=1)[0]
-    display_instances(image, r['masks'], r['class_ids'])
+    display_instances(image, r['masks'], r['class_ids'], image_name)
 
 
 if __name__ == '__main__':
-    TRAINING: bool = True
-    image_path = ''
+    TRAINING: bool = False
     LOGS_DIR = "logs"
 
     # Configurations
@@ -249,14 +225,18 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights")
+
+    # Either load coco pretrained model without the head, or load our trained model
     # Exclude the last layers because they require a matching
     # number of classes
-    model.load_weights('mask_rcnn_coco.h5', by_name=True, exclude=[
-        "mrcnn_class_logits", "mrcnn_bbox_fc",
-        "mrcnn_bbox", "mrcnn_mask"])
+    # model.load_weights('mask_rcnn_coco.h5', by_name=True, exclude=[
+    #     "mrcnn_class_logits", "mrcnn_bbox_fc",
+    #     "mrcnn_bbox", "mrcnn_mask"])
+
+    model.load_weights('mask_rcnn_rainsnowtraffic.h5', by_name=True)
 
     # Train or evaluate
     if TRAINING:
         train(model)
     else:
-        detect_and_visualize(model, 'dataset/val/Hadsundvej/Hadsundvej-1/cam1-00239.png')
+        detect_and_visualize(model, 'dataset/val/Hadsundvej/Hadsundvej-2/cam1-01311.png')

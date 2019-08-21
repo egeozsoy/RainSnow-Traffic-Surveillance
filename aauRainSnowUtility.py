@@ -11,10 +11,11 @@ def getRegistrationVarsFromFileName(imageFileName: str):
     if len(split) >= 3:
         scene = split[0]
         sequence = split[1]
+        base_folder = 'dataset/val' if scene == 'Hadsundvej' else 'dataset/train'
 
         # Then load the registration variables manually
         print("Reading calibration file at: " + os.path.join(scene, sequence + '-calib.yml'))
-        fs = cv2.FileStorage(os.path.join(scene, sequence + '-calib.yml'), cv2.FILE_STORAGE_READ)
+        fs = cv2.FileStorage(os.path.join(base_folder, os.path.join(scene, sequence + '-calib.yml')), cv2.FILE_STORAGE_READ)
 
         registration = dict()
         registration["homCam1Cam2"] = fs.getNode("homCam1Cam2").mat()

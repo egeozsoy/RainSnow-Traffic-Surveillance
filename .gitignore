@@ -8,3 +8,4 @@ aauRainSnow-thermal.json
 Visualize AAU RainSnow annotations.ipynb
 .idea/*
 *.h5
+logs/*
