@@ -9,3 +9,4 @@ Visualize AAU RainSnow annotations.ipynb
 .idea/*
 *.h5
 logs/*
+*.mp4
