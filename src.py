@@ -185,8 +185,8 @@ def display_instances(image, masks, class_ids, image_name):
             p = visualize.Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
-    plt.show()
-    plt.savefig('image_name')
+    plt.savefig(image_name.split('/', 2)[-1])  # only use the image_name part not the whole name
+    # plt.show()
 
 
 def detect_and_visualize(model, image_path):
@@ -239,4 +239,9 @@ if __name__ == '__main__':
     if TRAINING:
         train(model)
     else:
-        detect_and_visualize(model, 'dataset/val/Hadsundvej/Hadsundvej-2/cam1-01311.png')
+        # Do for all the images in a folder with specific format
+        for path in sorted(os.listdir('dataset/val/Hadsundvej/Hadsundvej-2')):
+            if path.startswith('cam1-') and path.endswith('.png'):
+                detect_and_visualize(model, os.path.join('dataset/val/Hadsundvej/Hadsundvej-2', path))
+
+        # detect_and_visualize(model, 'dataset/val/Hadsundvej/Hadsundvej-2/cam1-01311.png')
